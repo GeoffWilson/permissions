@@ -1,0 +1,5 @@
+name: PigletPermissions
+main: com.pigletcraft.permissions.PermissionsPlugin
+version: 1.0
+
+commands:
