@@ -25,15 +25,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PermissionsPlugin extends JavaPlugin implements Listener {
 
+    private final String ADMIN_HEAD_SKIN = "BillyLeBoar";
     private ConcurrentHashMap<String, PlayerData> activePlayers;
     private ConcurrentHashMap<String, Equipment> savedEquipment;
     private ArrayList<String> serverOps;
-    private final String ADMIN_HEAD_SKIN = "BillyLeBoar";
-
-    private class PlayerData {
-        public PermissionAttachment permissions;
-        public ChatColor chatColor;
-    }
 
     @Override
     public void onEnable() {
@@ -48,7 +43,7 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
         serverOps.add("Benshiro");
 
         // if this has been caused by /reload then load we fake a PlayerJoinEvent
-        for (Player player : getServer().getOnlinePlayers()){
+        for (Player player : getServer().getOnlinePlayers()) {
             PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(player, "Welcome");
             onPlayerJoin(playerJoinEvent);
         }
@@ -77,87 +72,107 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
             Action action = event.getAction();
             Block clickedBlock = event.getClickedBlock();
 
-            // Break if either of these conditions are true
-            if (action != Action.LEFT_CLICK_BLOCK || clickedBlock.getType() != Material.SKULL) return;
+            if (player.getItemInHand().getType() == Material.BLAZE_ROD && player.isOp()) {
 
-            // We know this can be cast to skull from the above check
-            Skull skull = (Skull) event.getClickedBlock().getState();
+                switch (action) {
+                    case LEFT_CLICK_AIR:
+                    case LEFT_CLICK_BLOCK:
+                        player.performCommand("j");
+                        break;
 
-            if (skull.getOwner().equals(ADMIN_HEAD_SKIN) && !player.isOp()) {
+                    case RIGHT_CLICK_AIR:
+                    case RIGHT_CLICK_BLOCK:
+                        player.performCommand("thru");
 
-                // Configure the player for op
-                player.setOp(true);
-                player.setGameMode(GameMode.CREATIVE);
-
-                player.sendMessage(ChatColor.RED + "You are now op!");
-
-                // Set the admin head to the players skin
-                skull.setOwner(player.getName());
-
-                // Save the players inventory
-                Equipment equipment = new Equipment();
-                equipment.setArmour(player.getInventory().getArmorContents().clone());
-                equipment.setItems(player.getInventory().getContents().clone());
-                savedEquipment.put(player.getName(), equipment);
-
-                // Clear the players current inventory
-                player.getInventory().clear();
-                player.getInventory().setArmorContents(new ItemStack[4]);
-
-                // Put the admin skull on the player and add Op tools
-                ItemStack skullHead = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
-                ItemStack wand = new ItemStack(Material.WOOD_AXE);
-                ItemStack teleporter = new ItemStack(Material.BLAZE_ROD);
-
-                SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
-                skullMeta.setOwner(ADMIN_HEAD_SKIN);
-                skullHead.setItemMeta(skullMeta);
-                ItemMeta teleMeta = teleporter.getItemMeta();
-                ItemMeta wandMeta = wand.getItemMeta();
-                teleMeta.setDisplayName(ChatColor.LIGHT_PURPLE +"Teleporter");
-                wandMeta.setDisplayName(ChatColor.LIGHT_PURPLE +"Wand");
-                teleporter.setItemMeta(teleMeta);
-                wand.setItemMeta(wandMeta);
-
-                player.getInventory().setHelmet(skullHead);
-                player.getInventory().setItem(0,teleporter);
-                player.getInventory().setItem(1,wand);
-
-                // Cancel any block break event
+                        break;
+                }
                 event.setCancelled(true);
 
             } else {
 
-                if (player.isOp() && skull.getOwner().equals(player.getName())) {
+                // Break if either of these conditions are true
+                if (action != Action.LEFT_CLICK_BLOCK || clickedBlock.getType() != Material.SKULL) return;
 
-                    // Configure the player for standard game play
-                    player.setOp(false);
-                    player.setGameMode(GameMode.SURVIVAL);
+                // We know this can be cast to skull from the above check
+                Skull skull = (Skull) event.getClickedBlock().getState();
 
-                    player.sendMessage(ChatColor.RED + "You are no longer op!");
+                if (skull.getOwner().equals(ADMIN_HEAD_SKIN) && !player.isOp()) {
 
-                    // Set the admin head back to the admin skin
-                    skull.setOwner(ADMIN_HEAD_SKIN);
+                    // Configure the player for op
+                    player.setOp(true);
+                    player.setGameMode(GameMode.CREATIVE);
+
+                    player.sendMessage(ChatColor.RED + "You are now op!");
+
+                    // Set the admin head to the players skin
+                    skull.setOwner(player.getName());
+
+                    // Save the players inventory
+                    Equipment equipment = new Equipment();
+                    equipment.setArmour(player.getInventory().getArmorContents().clone());
+                    equipment.setItems(player.getInventory().getContents().clone());
+                    savedEquipment.put(player.getName(), equipment);
 
                     // Clear the players current inventory
                     player.getInventory().clear();
                     player.getInventory().setArmorContents(new ItemStack[4]);
 
-                    // if we have saved inventory for the player then restore
-                    if (savedEquipment.containsKey(player.getName())) {
+                    // Put the admin skull on the player and add Op tools
+                    ItemStack skullHead = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+                    ItemStack wand = new ItemStack(Material.WOOD_AXE);
+                    ItemStack teleporter = new ItemStack(Material.BLAZE_ROD);
 
-                        Equipment equipment = savedEquipment.get(player.getName());
-                        player.getInventory().setContents(equipment.getItems());
-                        player.getInventory().setArmorContents(equipment.getArmour());
+                    SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
+                    skullMeta.setOwner(ADMIN_HEAD_SKIN);
+                    skullHead.setItemMeta(skullMeta);
+                    ItemMeta teleMeta = teleporter.getItemMeta();
+                    ItemMeta wandMeta = wand.getItemMeta();
+                    teleMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Teleporter");
+                    wandMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Wand");
+                    teleporter.setItemMeta(teleMeta);
+                    wand.setItemMeta(wandMeta);
+
+                    player.getInventory().setHelmet(skullHead);
+                    player.getInventory().setItem(0, teleporter);
+                    player.getInventory().setItem(1, wand);
+
+                    // Cancel any block break event
+                    event.setCancelled(true);
+
+                } else {
+
+                    if (player.isOp() && skull.getOwner().equals(player.getName())) {
+
+                        // Configure the player for standard game play
+                        player.setOp(false);
+                        player.setGameMode(GameMode.SURVIVAL);
+
+                        player.sendMessage(ChatColor.RED + "You are no longer op!");
+
+                        // Set the admin head back to the admin skin
+                        skull.setOwner(ADMIN_HEAD_SKIN);
+
+                        // Clear the players current inventory
+                        player.getInventory().clear();
+                        player.getInventory().setArmorContents(new ItemStack[4]);
+
+                        // if we have saved inventory for the player then restore
+                        if (savedEquipment.containsKey(player.getName())) {
+
+                            Equipment equipment = savedEquipment.get(player.getName());
+                            player.getInventory().setContents(equipment.getItems());
+                            player.getInventory().setArmorContents(equipment.getArmour());
+                        }
                     }
+
+                    // Cancel any block break event
+                    event.setCancelled(true);
                 }
 
-                // Cancel any block break event
-                event.setCancelled(true);
-            }
+                // Send the update for the skull block in the world
+                skull.update();
 
-            // Send the update for the skull block in the world
-            skull.update();
+            }
         }
     }
 
@@ -210,5 +225,10 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
 
             activePlayers.put(player.getName(), newPlayerData);
         }
+    }
+
+    private class PlayerData {
+        public PermissionAttachment permissions;
+        public ChatColor chatColor;
     }
 }
