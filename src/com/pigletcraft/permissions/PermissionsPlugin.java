@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -103,12 +104,24 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                 player.getInventory().clear();
                 player.getInventory().setArmorContents(new ItemStack[4]);
 
-                // Put the admin skull on the player
+                // Put the admin skull on the player and add Op tools
                 ItemStack skullHead = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+                ItemStack wand = new ItemStack(Material.WOOD_AXE);
+                ItemStack teleporter = new ItemStack(Material.COMPASS);
+
                 SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
                 skullMeta.setOwner(ADMIN_HEAD_SKIN);
                 skullHead.setItemMeta(skullMeta);
+                ItemMeta teleMeta = teleporter.getItemMeta();
+                ItemMeta wandMeta = wand.getItemMeta();
+                teleMeta.setDisplayName(ChatColor.LIGHT_PURPLE +"Teleporter");
+                wandMeta.setDisplayName(ChatColor.LIGHT_PURPLE +"Wand");
+                teleporter.setItemMeta(teleMeta);
+                wand.setItemMeta(wandMeta);
+
                 player.getInventory().setHelmet(skullHead);
+                player.getInventory().setItem(0,teleporter);
+                player.getInventory().setItem(1,wand);
 
                 // Cancel any block break event
                 event.setCancelled(true);
