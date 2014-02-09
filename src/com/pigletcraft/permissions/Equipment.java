@@ -1,57 +1,40 @@
 package com.pigletcraft.permissions;
 
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
-import redis.clients.jedis.Jedis;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Map;
+import java.io.IOException;
+import java.util.List;
 
 /**
- * Created by Benshiro on 08/02/14.
+ * This class will store the players inventory while they are op, this includes server reloads
+ *
+ * @author Ben Carvell
+ * @author Geoff Wilson
  */
 public class Equipment {
     private ItemStack[] items;
     private ItemStack[] armour;
 
-    public Equipment(){}
+    public Equipment() {}
 
-    public Equipment(String playerName, Map<String, String> items, Map<String, String> armour) {
+    public Equipment(String playerName, FileConfiguration config) {
+
+        try {
+            config.load("op-inv.yml");
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
 
         String playerItemKey = String.format("%s.items", playerName);
         String playerArmourKey = String.format("%s.armour", playerName);
 
-        ArrayList<ItemStack> itemList = new ArrayList<>();
-        ArrayList<ItemStack> armourList = new ArrayList<> ();
-
-        Jedis jedis = new Jedis("127.0.0.1");
-        for (String key : items.keySet()) {
-            try {
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(jedis.hget(playerItemKey.getBytes(), key.getBytes()));
-                ObjectInput input = new ObjectInputStream(inputStream);
-                ItemStack item = ItemStack.deserialize((Map<String, Object>) input.readObject());
-                itemList.add(item);
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-        if (armour != null) {
-            for (String key : armour.keySet()) {
-                try {
-                    ByteArrayInputStream inputStream = new ByteArrayInputStream(jedis.hget(playerArmourKey.getBytes(), key.getBytes()));
-                    ObjectInput input = new ObjectInputStream(inputStream);
-                    ItemStack item = ItemStack.deserialize((Map<String, Object>) input.readObject());
-                    armourList.add(item);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
+        List<ItemStack> itemList = (List<ItemStack>) config.get(playerItemKey);
+        List<ItemStack> armourList = (List<ItemStack>) config.get(playerArmourKey);
 
         this.items = itemList.toArray(new ItemStack[itemList.size()]);
         this.armour = armourList.toArray(new ItemStack[armourList.size()]);
-
     }
 
     public ItemStack[] getItems() {
@@ -70,38 +53,20 @@ public class Equipment {
         this.armour = armour;
     }
 
-    public void save(String playerName) {
+    public void save(String playerName, FileConfiguration config) {
 
-        Jedis jedis = new Jedis("127.0.0.1");
-        jedis.del(playerName + ".items", playerName + ".armour");
+        String itemKey = String.format("%s.items", playerName);
+        String armourKey = String.format("%s.armour", playerName);
 
-        for (int i = 0; i < items.length; i++) {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            try {
-                ObjectOutput objectOutput = new ObjectOutputStream(byteArrayOutputStream);
-                objectOutput.writeObject(items[i].serialize());
-                jedis.hset((playerName + ".items").getBytes(),String.valueOf(i).getBytes(),byteArrayOutputStream.toByteArray());
+        if (items != null) config.set(itemKey, items);
+        if (armour != null) config.set(armourKey, armour);
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            config.save("op-inv.yml");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        i
-        for (int i = 0; i < armour.length; i++) {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            try {
-                ObjectOutput objectOutput = new ObjectOutputStream(byteArrayOutputStream);
-                objectOutput.writeObject(armour[i].serialize());
-                jedis.hset((playerName + ".armour").getBytes(),String.valueOf(i).getBytes(),byteArrayOutputStream.toByteArray());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
     }
-
-
 }
 
 

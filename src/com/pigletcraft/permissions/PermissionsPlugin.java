@@ -17,15 +17,16 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
-import redis.clients.jedis.Jedis;
 
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PermissionsPlugin extends JavaPlugin implements Listener {
 
     private ConcurrentHashMap<String, PlayerData> activePlayers;
     private ConcurrentHashMap<String, Equipment> savedEquipment;
+    private ArrayList<String> serverOps;
+    private final String ADMIN_HEAD_SKIN = "BillyLeBoar";
 
     private class PlayerData {
         public PermissionAttachment permissions;
@@ -36,69 +37,99 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
     public void onEnable() {
 
         // Create the necessary objects for the plugin
-        activePlayers = new ConcurrentHashMap<String, PlayerData>();
-        savedEquipment = new ConcurrentHashMap<String, Equipment>();
+        activePlayers = new ConcurrentHashMap<>();
+        savedEquipment = new ConcurrentHashMap<>();
+
+        // This is the list of users allow to become op
+        serverOps = new ArrayList<>();
+        serverOps.add("GeoffWilson");
+        serverOps.add("Benshiro");
+
         // Register as an event handler
         getServer().getPluginManager().registerEvents(this, this);
-            }
+    }
 
     @Override
     public void onDisable() {
-        for(String playerName: savedEquipment.keySet()){
+        for (String playerName : savedEquipment.keySet()) {
             Equipment equipment = savedEquipment.get(playerName);
-            equipment.save(playerName);
-
+            equipment.save(playerName, this.getConfig());
         }
     }
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+
         Player player = event.getPlayer();
-        if (player.getName().equals("GeoffWilson")||player.getName().equals("Benshiro")) {
-            org.bukkit.event.block.Action action = event.getAction();
-            if (action!=Action.LEFT_CLICK_BLOCK) return;
-            if (event.getClickedBlock().getType()!= Material.SKULL) return;
+
+        if (serverOps.contains(player.getName())) {
+
+            Action action = event.getAction();
+
+            if (action != Action.LEFT_CLICK_BLOCK) return;
+            if (event.getClickedBlock().getType() != Material.SKULL) return;
+
             Skull skull = (Skull) event.getClickedBlock().getState();
-            if (skull.getOwner().equals("BillyLeBoar")&&!player.isOp()){
+
+            if (skull.getOwner().equals(ADMIN_HEAD_SKIN) && !player.isOp()) {
+
+                // Configure the player for op
                 player.setOp(true);
                 player.setGameMode(GameMode.CREATIVE);
+
+                // Set the admin head to the players skin
                 skull.setOwner(player.getName());
-                event.setCancelled(true);
+
+                // Save the players inventory
                 Equipment equipment = new Equipment();
                 equipment.setArmour(player.getInventory().getArmorContents().clone());
                 equipment.setItems(player.getInventory().getContents().clone());
-                player.getInventory().clear();
-                player.getInventory().setArmorContents(new ItemStack[4]);
-                ItemStack skullHead = new ItemStack(Material.SKULL_ITEM,1,(byte)3);
-                SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
-                skullMeta.setOwner("BillyLeBoar");
-                skullHead.setItemMeta(skullMeta);
-                player.getInventory().setHelmet(skullHead);
                 savedEquipment.put(player.getName(), equipment);
 
+                // Clear the players current inventory
+                player.getInventory().clear();
+                player.getInventory().setArmorContents(new ItemStack[4]);
 
-            }  else {
-                if (player.isOp()&&skull.getOwner().equals(player.getName())){
+                // Put the admin skull on the player
+                ItemStack skullHead = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+                SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
+                skullMeta.setOwner(ADMIN_HEAD_SKIN);
+                skullHead.setItemMeta(skullMeta);
+                player.getInventory().setHelmet(skullHead);
+
+                // Cancel any block break event
+                event.setCancelled(true);
+
+            } else {
+
+                if (player.isOp() && skull.getOwner().equals(player.getName())) {
+
+                    // Configure the player for standard game play
                     player.setOp(false);
                     player.setGameMode(GameMode.SURVIVAL);
-                    skull.setOwner("BillyLeBoar");
-                    if(savedEquipment.containsKey(player.getName())){
-                        Equipment equipment = savedEquipment.get(player.getName());
+
+                    // Set the admin head back to the admin skin
+                    skull.setOwner(ADMIN_HEAD_SKIN);
+
+                    // if we have saved inventory for the player then restore
+                    if (savedEquipment.containsKey(player.getName())) {
+
+                        // Clear the players current inventory
                         player.getInventory().clear();
                         player.getInventory().setArmorContents(new ItemStack[4]);
+
+                        Equipment equipment = savedEquipment.get(player.getName());
                         player.getInventory().setContents(equipment.getItems());
                         player.getInventory().setArmorContents(equipment.getArmour());
-
                     }
-
-
                 }
+
+                // Cancel any block break event
                 event.setCancelled(true);
             }
+
+            // Send the update for the skull block in the world
             skull.update();
-
-
-
         }
     }
 
@@ -142,18 +173,8 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                 newPlayerData.permissions.setPermission("validation.fireworks", true);
             }
 
-            // Load any saved inventory from Reids
             if (player.isOp()) {
-                Jedis jedis = new Jedis("127.0.0.1");
-                if (jedis.exists(player.getName() + ".items")) {
-                    Map<String, String> items = jedis.hgetAll(player.getName() + ".items");
-                    Map<String, String> armour = null;
-                    if (jedis.exists(player.getName() + ".armour")) {
-                        armour = jedis.hgetAll(player.getName() + ".armour");
-                    }
-                    savedEquipment.put(player.getName() , new Equipment(player.getName() , items, armour));
-                }
-
+                savedEquipment.put(player.getName(), new Equipment(player.getName(), this.getConfig()));
             }
 
             activePlayers.put(player.getName(), newPlayerData);

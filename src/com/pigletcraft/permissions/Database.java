@@ -3,23 +3,33 @@ package com.pigletcraft.permissions;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Properties;
 
 public class Database {
 
-    private final String connectionString = "jdbc:mysql://localhost/piglet";
-    private final String username = "";
-    private final String password = "";
-
     public ChatColor getChatColor(String playerName) {
+
+        Properties prop = new Properties();
+
+        try {
+            InputStream input = new FileInputStream("permissions.properties");
+            prop.load(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         ChatColor chatColor = ChatColor.WHITE;
 
         try {
-            Connection connection = DriverManager.getConnection(connectionString, username, password);
+            String connectionString = "jdbc:mysql://localhost/piglet";
+            Connection connection = DriverManager.getConnection(connectionString, prop.getProperty("username"), prop.getProperty("password"));
             PreparedStatement statement = connection.prepareStatement("SELECT chat_color FROM minecraft_user WHERE name = ?");
             statement.setString(1, playerName);
 
