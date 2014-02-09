@@ -107,7 +107,7 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                 // Put the admin skull on the player and add Op tools
                 ItemStack skullHead = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
                 ItemStack wand = new ItemStack(Material.WOOD_AXE);
-                ItemStack teleporter = new ItemStack(Material.COMPASS);
+                ItemStack teleporter = new ItemStack(Material.BLAZE_ROD);
 
                 SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
                 skullMeta.setOwner(ADMIN_HEAD_SKIN);
