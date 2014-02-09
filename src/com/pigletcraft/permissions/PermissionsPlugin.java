@@ -3,6 +3,7 @@ package com.pigletcraft.permissions;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -45,12 +46,20 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
         serverOps.add("GeoffWilson");
         serverOps.add("Benshiro");
 
+        // if this has been caused by /reload then load we fake a PlayerJoinEvent
+        for (Player player : getServer().getOnlinePlayers()){
+            PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(player, "Welcome");
+            onPlayerJoin(playerJoinEvent);
+        }
+
         // Register as an event handler
         getServer().getPluginManager().registerEvents(this, this);
     }
 
     @Override
     public void onDisable() {
+
+        // Save all the op inventories to disk
         for (String playerName : savedEquipment.keySet()) {
             Equipment equipment = savedEquipment.get(playerName);
             equipment.save(playerName, this.getConfig());
@@ -65,10 +74,12 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
         if (serverOps.contains(player.getName())) {
 
             Action action = event.getAction();
+            Block clickedBlock = event.getClickedBlock();
 
-            if (action != Action.LEFT_CLICK_BLOCK) return;
-            if (event.getClickedBlock().getType() != Material.SKULL) return;
+            // Break if either of these conditions are true
+            if (action != Action.LEFT_CLICK_BLOCK || clickedBlock.getType() != Material.SKULL) return;
 
+            // We know this can be cast to skull from the above check
             Skull skull = (Skull) event.getClickedBlock().getState();
 
             if (skull.getOwner().equals(ADMIN_HEAD_SKIN) && !player.isOp()) {
@@ -76,6 +87,8 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                 // Configure the player for op
                 player.setOp(true);
                 player.setGameMode(GameMode.CREATIVE);
+
+                player.sendMessage(ChatColor.RED + "You are now op!");
 
                 // Set the admin head to the players skin
                 skull.setOwner(player.getName());
@@ -108,15 +121,17 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                     player.setOp(false);
                     player.setGameMode(GameMode.SURVIVAL);
 
+                    player.sendMessage(ChatColor.RED + "You are no longer op!");
+
                     // Set the admin head back to the admin skin
                     skull.setOwner(ADMIN_HEAD_SKIN);
 
+                    // Clear the players current inventory
+                    player.getInventory().clear();
+                    player.getInventory().setArmorContents(new ItemStack[4]);
+
                     // if we have saved inventory for the player then restore
                     if (savedEquipment.containsKey(player.getName())) {
-
-                        // Clear the players current inventory
-                        player.getInventory().clear();
-                        player.getInventory().setArmorContents(new ItemStack[4]);
 
                         Equipment equipment = savedEquipment.get(player.getName());
                         player.getInventory().setContents(equipment.getItems());
@@ -135,15 +150,18 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
+
         ChatColor c = ChatColor.WHITE;
         if (activePlayers.containsKey(event.getPlayer().getName())) {
             c = activePlayers.get(event.getPlayer().getName()).chatColor;
         }
+
         event.setFormat("<" + c + "%s" + ChatColor.WHITE + "> %s");
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+
         Player player = event.getPlayer();
         if (activePlayers.containsKey(player.getName())) {
             activePlayers.remove(player.getName());
