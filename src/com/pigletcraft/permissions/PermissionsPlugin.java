@@ -42,6 +42,7 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
         serverOps = new ArrayList<>();
         serverOps.add("GeoffWilson");
         serverOps.add("Benshiro");
+        serverOps.add("BillyLeBoar");
 
         // if this has been caused by /reload then load we fake a PlayerJoinEvent
         for (Player player : getServer().getOnlinePlayers()) {
@@ -167,7 +168,9 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                     }
 
                     // Cancel any block break event
+                    if(serverOps.contains(skull.getOwner())){
                     event.setCancelled(true);
+                    }
                 }
 
                 // Send the update for the skull block in the world
