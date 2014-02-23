@@ -1,15 +1,15 @@
 package com.pigletcraft.permissions;
 
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -22,7 +22,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.LockSupport;
 
 public class PermissionsPlugin extends JavaPlugin implements Listener {
 
@@ -123,20 +122,31 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                     ItemStack skullHead = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
                     ItemStack wand = new ItemStack(Material.WOOD_AXE);
                     ItemStack teleporter = new ItemStack(Material.BLAZE_ROD);
+                    ItemStack rewinder = new ItemStack(Material.CARROT_STICK);
+                    ItemStack firework = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
 
                     SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
                     skullMeta.setOwner(ADMIN_HEAD_SKIN);
                     skullHead.setItemMeta(skullMeta);
                     ItemMeta teleMeta = teleporter.getItemMeta();
                     ItemMeta wandMeta = wand.getItemMeta();
+                    ItemMeta rewMeta = rewinder.getItemMeta();
+                    SkullMeta fwMeta = (SkullMeta)firework.getItemMeta();
                     teleMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Teleporter");
                     wandMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Wand");
+                    rewMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Rewinder");
+                    fwMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Firework Launcher");
+                    fwMeta.setOwner("MHF_TNT2");
                     teleporter.setItemMeta(teleMeta);
                     wand.setItemMeta(wandMeta);
+                    rewinder.setItemMeta(rewMeta);
+                    firework.setItemMeta(fwMeta);
 
                     player.getInventory().setHelmet(skullHead);
                     player.getInventory().setItem(0, teleporter);
                     player.getInventory().setItem(1, wand);
+                    player.getInventory().setItem(2, rewinder);
+                    player.getInventory().setItem(3, firework);
 
                     // Cancel any block break event
                     event.setCancelled(true);
