@@ -1,15 +1,15 @@
 package com.pigletcraft.permissions;
 
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -22,6 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.LockSupport;
 
 public class PermissionsPlugin extends JavaPlugin implements Listener {
 
@@ -62,7 +63,7 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
 
         Player player = event.getPlayer();
@@ -78,15 +79,15 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                     case LEFT_CLICK_AIR:
                     case LEFT_CLICK_BLOCK:
                         player.performCommand("j");
+                        event.setCancelled(true);
                         break;
 
                     case RIGHT_CLICK_AIR:
                     case RIGHT_CLICK_BLOCK:
                         player.performCommand("thru");
-
+                        event.setCancelled(true);
                         break;
                 }
-                event.setCancelled(true);
 
             } else {
 
@@ -195,6 +196,40 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
             activePlayers.remove(player.getName());
         }
     }
+
+
+    /*
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+
+        if (event.getEntity() instanceof Snowball){
+            Snowball a = (Snowball) event.getEntity();
+            if (a.getShooter() instanceof Player) {
+                Player p = (Player) a.getShooter();
+                if (p.isOp()) {
+                    a.getWorld().createExplosion(a.getLocation(), 7.5f);
+                }
+            }
+        }
+    }*/
+
+    /*
+    @EventHandler
+    public void onPigHurt(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Pig) {
+            event.setCancelled(true);
+            Location loc = event.getEntity().getLocation();
+            World w = loc.getWorld();
+            for (int i = 0; i < 1000; i ++) {
+                w.strikeLightning(Bukkit.getPlayer("Benshiro").getLocation());
+                    //LockSupport.parkNanos(10000000);
+
+            }
+
+
+
+        }
+    }     */
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
