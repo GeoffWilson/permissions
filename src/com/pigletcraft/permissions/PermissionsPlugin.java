@@ -263,8 +263,9 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
             newPlayerData.permissions.setPermission("bank.bank", true);
 
             if (player.getName().equals("GeoffWilson") || player.getName().equals("Benshiro")) {
-                newPlayerData.permissions.setPermission("validation.rain", true);
-                newPlayerData.permissions.setPermission("validation.fireworks", true);
+                newPlayerData.permissions.setPermission("spawn.rain", true);
+                newPlayerData.permissions.setPermission("spawn.fireworks", true);
+                newPlayerData.permissions.setPermission("spawn.tnt", true);
             }
 
             if (player.isOp()) {
