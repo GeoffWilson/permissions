@@ -124,7 +124,7 @@ public class PermissionsPlugin extends JavaPlugin implements Listener {
                     ItemStack teleporter = new ItemStack(Material.BLAZE_ROD);
                     ItemStack rewinder = new ItemStack(Material.CARROT_STICK);
                     ItemStack firework = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
-                    ItemStack pigmanstick = new ItemStack(Material.REDSTONE_TORCH_ON);
+                    ItemStack pigmanstick = new ItemStack(Material.FEATHER);
 
                     SkullMeta skullMeta = (SkullMeta) skullHead.getItemMeta();
                     skullMeta.setOwner(ADMIN_HEAD_SKIN);
